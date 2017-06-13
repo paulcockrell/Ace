@@ -1,5 +1,7 @@
 defmodule Ace.HTTP.RequestTest do
   use Raxx.Verify.RequestCase
+  import Ace.HTTP.Request
+  doctest Ace.HTTP.Request
 
   setup do
     raxx_app = {Raxx.Verify.Forwarder, %{target: self()}}
