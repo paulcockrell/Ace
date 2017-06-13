@@ -1,5 +1,7 @@
 defmodule Ace.HTTP.RequestTest do
   use Raxx.Verify.RequestCase
+  import Ace.HTTP.Request
+  doctest Ace.HTTP.Request
 
   import ExUnit.CaptureLog, only: [capture_log: 1]
 
