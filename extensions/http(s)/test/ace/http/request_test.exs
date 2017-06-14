@@ -3,6 +3,11 @@ defmodule Ace.HTTP.RequestTest do
   import Ace.HTTP.Request
   doctest Ace.HTTP.Request
 
+  test "parse a simple start line" do
+    assert {:ok, start_line, ""} = "GET / HTTP/1.1\r\n" |> parse_start_line()
+    assert {:GET, "/", {1, 1}} = start_line
+  end
+
   setup do
     raxx_app = {Raxx.Verify.Forwarder, %{target: self()}}
     {:ok, endpoint} = Ace.HTTP.start_link(raxx_app, port: 0)
