@@ -5,6 +5,11 @@ defmodule Ace.HTTP.RequestTest do
 
   import ExUnit.CaptureLog, only: [capture_log: 1]
 
+  test "parse a simple start line" do
+    assert {:ok, start_line, ""} = "GET / HTTP/1.1\r\n" |> parse_start_line()
+    assert {:GET, "/", {1, 1}} = start_line
+  end
+
   setup do
     raxx_app = {Raxx.Verify.Forwarder, %{target: self()}}
     capture_log fn() ->
