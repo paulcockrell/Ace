@@ -122,7 +122,6 @@ defmodule Ace.Server do
     mod.handle_info(message, state)
     |> next(mod, connection)
   end
-
   defp next({:send, packet, state}, mod, connection) do
     # Set the socket to send a single received packet as a message to this process.
     # This stops the mailbox getting flooded but also also the server to respond to non tcp messages, this was not possible `using gen_tcp.recv`.
@@ -146,5 +145,10 @@ defmodule Ace.Server do
   defp next({:close, state}, mod, connection) do
     :ok = Connection.close(connection)
     {:stop, :normal, {mod, state}}
+  end
+  defp next({writable, state}, mod, connection) when is_binary(writable) do
+    :ok = Connection.send(connection, writable)
+    :ok = Connection.set_active(connection, :once)
+    {:noreply, {mod, state, connection}}
   end
 end
