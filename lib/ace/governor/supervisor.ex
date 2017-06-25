@@ -9,6 +9,7 @@ defmodule Ace.Governor.Supervisor do
   """
   @spec start_link(pid, Ace.Connection.connection, non_neg_integer) :: {:ok, pid}
   def start_link(server_supervisor, listen_socket, acceptors) do
+    {:ok, server_supervisor} = Process.get() |> Keyword.fetch(Ace.Server.Supervisor)
     {:ok, supervisor} = Supervisor.start_link(__MODULE__, {server_supervisor, listen_socket}, [])
     # To speed up a server multiple process can be listening for a connection simultaneously.
     # In this case n Governors will start n Servers listening before a single connection is received.

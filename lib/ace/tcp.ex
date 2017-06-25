@@ -23,7 +23,7 @@ defmodule Ace.TCP do
                 | {:port, :inet.port_number}
 
   require Logger
-  use GenServer
+  use Supervisor
 
   # Settings for the TCP socket
   @socket_options [
@@ -69,7 +69,7 @@ defmodule Ace.TCP do
         Logger.warn("#{__MODULE__}: #{mod} does not implement Ace.Application behaviour.")
     end
     name = Keyword.get(options, :name)
-    GenServer.start_link(__MODULE__, {app, options}, [name: name])
+    Supervisor.start_link(__MODULE__, {app, options}, [name: name])
   end
 
   @doc """
@@ -89,18 +89,25 @@ defmodule Ace.TCP do
     acceptors = Keyword.get(options, :acceptors, 50)
 
     # Setup a socket to listen with our TCP options
-    {:ok, listen_socket} = :gen_tcp.listen(port, @socket_options)
-    socket = {:tcp, listen_socket}
+    {:ok, raw_listen_socket} = :gen_tcp.listen(port, @socket_options)
+    listen_socket = {:tcp, raw_listen_socket}
 
-    {:ok, server_supervisor} = Ace.Server.Supervisor.start_link(app)
-    {:ok, governor_supervisor} = Ace.Governor.Supervisor.start_link(server_supervisor, socket, acceptors)
+    # {:ok, server_supervisor} = Ace.Server.Supervisor.start_link(app)
+    # {:ok, governor_supervisor} = Ace.Governor.Supervisor.start_link(server_supervisor, listen_socket, acceptors)
 
-    # Fetch and display the port information for the listening socket.
-    {:ok, port} = Ace.Connection.port(socket)
+    # Fetch and display the port information for the listening listen_socket.
+    {:ok, port} = Ace.Connection.port(listen_socket)
     name = Keyword.get(options, :name, __MODULE__)
     :ok = Logger.debug("#{name} listening on port: #{port}")
 
-    {:ok, {socket, server_supervisor, governor_supervisor}}
+    children = [
+      supervisor(Ace.Server.Supervisor, [app]),
+      supervisor(Ace.Governor.Supervisor, [:bob, listen_socket, acceptors]),
+    ]
+
+    supervise(children, strategy: :rest_for_one)
+    # |> IO.inspect
+    # # {:ok, {listen_socket, server_supervisor, governor_supervisor}}
   end
 
   def handle_call(:port, _from, state = {socket, _, _}) do

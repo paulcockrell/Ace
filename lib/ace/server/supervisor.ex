@@ -14,7 +14,11 @@ defmodule Ace.Server.Supervisor do
   """
   @spec start_link(Ace.Server.app) :: {:ok, pid}
   def start_link(app) do
-    Supervisor.start_link(__MODULE__, app)
+    case Supervisor.start_link(__MODULE__, app) do
+      {:ok, pid} ->
+        Process.put(__MODULE__, pid)
+        {:ok, pid}
+    end
   end
 
   ## MODULE CALLBACKS
